@@ -30,6 +30,7 @@
 #include "Hacks/Backtrack.h"
 #include "Hacks/Sound.h"
 #include "Hacks/StreamProofESP.h"
+#include "Hooks.h"
 
 constexpr auto windowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize
 | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
@@ -66,11 +67,19 @@ GUI::GUI() noexcept
     ImFontConfig cfg;
     cfg.SizePixels = 15.0f;
 
-#ifdef _WIN32
+    ImFontConfig cfgbackground;
+    cfgbackground.SizePixels = 70.0f;
+
+    ImFontConfig cfgIcons;
+    cfgIcons.SizePixels = 47.0f;
+
+    ImFontConfig cfgLogo;
+    cfgLogo.SizePixels = 100.0f;
+
+#ifdef _WIN32           //fontssss
     if (PWSTR pathToFonts; SUCCEEDED(SHGetKnownFolderPath(FOLDERID_Fonts, 0, nullptr, &pathToFonts))) {
         const std::filesystem::path path{ pathToFonts };
         CoTaskMemFree(pathToFonts);
-
         fonts.normal15px = io.Fonts->AddFontFromFileTTF((path / "tahoma.ttf").string().c_str(), 15.0f, &cfg, Helpers::getFontGlyphRanges());
         if (!fonts.normal15px)
             io.Fonts->AddFontDefault(&cfg);
@@ -83,6 +92,13 @@ GUI::GUI() noexcept
         io.Fonts->AddFontFromFileTTF((path / "seguisym.ttf").string().c_str(), 15.0f, &cfg, symbol);
         cfg.MergeMode = false;
     }
+    if (PWSTR pathToRoaming; SUCCEEDED(SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, nullptr, &pathToRoaming))) {
+        const std::filesystem::path path{ pathToRoaming };
+        CoTaskMemFree(pathToRoaming);
+        fonts.backgroundCubes = io.Fonts->AddFontFromFileTTF((path / "slippery/dependencies/slippery.ttf").string().c_str(), 70.0f, &cfgbackground, Helpers::getFontGlyphRanges());
+        fonts.icons = io.Fonts->AddFontFromFileTTF((path / "slippery/dependencies/slippery.ttf").string().c_str(), 47.0f, &cfgbackground, Helpers::getFontGlyphRanges());
+        fonts.logo = io.Fonts->AddFontFromFileTTF((path / "slippery/dependencies/slippery.ttf").string().c_str(), 100.0f, &cfgbackground, Helpers::getFontGlyphRanges());
+    }
 #else
     fonts.normal15px = addFontFromVFONT("csgo/panorama/fonts/notosans-regular.vfont", 15.0f, Helpers::getFontGlyphRanges(), false);
 #endif
@@ -91,6 +107,7 @@ GUI::GUI() noexcept
     addFontFromVFONT("csgo/panorama/fonts/notosanskr-regular.vfont", 15.0f, io.Fonts->GetGlyphRangesKorean(), true);
     addFontFromVFONT("csgo/panorama/fonts/notosanssc-regular.vfont", 17.0f, io.Fonts->GetGlyphRangesChineseFull(), true);
 }
+
 
 void GUI::render() noexcept
 {
@@ -608,7 +625,7 @@ void GUI::renderConfigWindow(bool contentOnly) noexcept
 
 void GUI::renderGuiStyle2() noexcept
 {
-    ImGui::Begin("Osiris", nullptr, windowFlags | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysAutoResize);
+    /*ImGui::Begin("slippin", nullptr, windowFlags | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysAutoResize);
 
     if (ImGui::BeginTabBar("TabBar", ImGuiTabBarFlags_Reorderable | ImGuiTabBarFlags_FittingPolicyScroll | ImGuiTabBarFlags_NoTooltip)) {
         if (ImGui::BeginTabItem("Aimbot")) {
@@ -642,5 +659,41 @@ void GUI::renderGuiStyle2() noexcept
         ImGui::EndTabBar();
     }
 
+    ImGui::End();*/
+
+    ImGui::SetNextWindowBgAlpha(1.0f);
+    ImGui::SetNextWindowSize(ImVec2(880, 540), ImGuiCond_Once);
+    ImGui::Begin("slippinMain", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoTitleBar);
+   
+    ImGui::PushStyleVar(ImGuiStyleVar_CellPadding   , ImVec2(0, 0));    //<-hate this
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding , ImVec2(0, 0));
+    ImGui::PushStyleVar(ImGuiStyleVar_CellPadding   , ImVec2(0, 0));
+    ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 2);
+    ImGui::SetCursorPos(ImVec2(0, 0));
+
+    ImGui::BeginChild("SIDEBAR", ImVec2(51, 550), true);
+    ImGui::PushFont(fonts.logo);
+    ImDrawList* logo = ImGui::GetWindowDrawList();
+    logo->AddText(ImVec2(ImGui::GetWindowPos().x+6, ImGui::GetWindowPos().y-56), 0xFFFFFFFF, "S");
+    ImGui::PopFont();
+    ImGui::EndChild();
+
+    ImGui::SetCursorPos(ImVec2(50, 0));
+    ImGui::BeginChild("TOPBAR", ImVec2(829, 51), true);
+
+    ImGui::EndChild();
+   
+    ImGui::PopStyleVar();
+    ImGui::PopStyleVar();
+    ImGui::PopStyleVar();
+    ImGui::PopStyleVar();
+    
+    //Submenus aka child functions here (drawmiscgui() etc)
+    ImGui::End();
+    ImGui::Begin("Unhook", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysAutoResize);
+    if (ImGui::Button("unhook"))
+        hooks->uninstall();
     ImGui::End();
 }
+
+

@@ -33,6 +33,10 @@ private:
 
     struct {
         ImFont* normal15px = nullptr;
+        ImFont* backgroundCubes = nullptr;
+        ImFont* arial30px = nullptr;
+        ImFont* icons = nullptr;
+        ImFont* logo = nullptr;
     } fonts;
 
     float timeToNextConfigRefresh = 0.1f;

@@ -129,11 +129,11 @@ struct MiscConfig {
 
     SpectatorList spectatorList;
     struct Watermark {
-        bool enabled = false;
+        bool enabled = true;;
     };
     Watermark watermark;
     float aspectratio{ 0 };
-    std::string killMessageString{ "Gotcha!" };
+    std::string killMessageString{ "" };
     int banColor{ 6 };
     std::string banText{ "Cheater has been permanently banned from official CS:GO servers." };
     ColorToggle3 bombTimer{ 1.0f, 0.55f, 0.0f };

@@ -46,7 +46,7 @@ int CALLBACK fontCallback(const LOGFONTW* lpelfe, const TEXTMETRICW*, DWORD, LPA
 
         if (HDC hdc = CreateCompatibleDC(nullptr)) {
             SelectObject(hdc, font);
-            // Do not use TTC fonts as we only support TTF fonts
+            // Do not use TTC fonts as we only support TTF fonts <- ok
             fontData = GetFontData(hdc, 'fctt', 0, NULL, 0);
             DeleteDC(hdc);
         }
@@ -65,9 +65,10 @@ int CALLBACK fontCallback(const LOGFONTW* lpelfe, const TEXTMETRICW*, DWORD, LPA
 {
     std::filesystem::path path;
 #ifdef _WIN32
-    if (PWSTR pathToDocuments; SUCCEEDED(SHGetKnownFolderPath(FOLDERID_Documents, 0, nullptr, &pathToDocuments))) {
-        path = pathToDocuments;
-        CoTaskMemFree(pathToDocuments);
+    if (PWSTR pathToRoamingAppData; SUCCEEDED(SHGetKnownFolderPath(FOLDERID_RoamingAppData, 0, nullptr, &pathToRoamingAppData))) {
+        path = pathToRoamingAppData;
+        path += "/slippery/configs";
+        CoTaskMemFree(pathToRoamingAppData);
     }
 #else
     if (const char* homeDir = getenv("HOME"))

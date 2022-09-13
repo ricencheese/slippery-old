@@ -68,6 +68,7 @@
 #include "SDK/UserCmd.h"
 #include "SDK/Constants/UserMessages.h"
 
+
 #ifdef _WIN32
 
 LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
