@@ -660,33 +660,17 @@ void GUI::renderGuiStyle2() noexcept
     }
 
     ImGui::End();*/
-
+    
     ImGui::SetNextWindowBgAlpha(1.0f);
     ImGui::SetNextWindowSize(ImVec2(880, 540), ImGuiCond_Once);
     ImGui::Begin("slippinMain", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoTitleBar);
-   
-    ImGui::PushStyleVar(ImGuiStyleVar_CellPadding   , ImVec2(0, 0));    //<-hate this
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding , ImVec2(0, 0));
-    ImGui::PushStyleVar(ImGuiStyleVar_CellPadding   , ImVec2(0, 0));
-    ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 2);
-    ImGui::SetCursorPos(ImVec2(0, 0));
-
-    ImGui::BeginChild("SIDEBAR", ImVec2(51, 550), true);
+    ImVec2 vMainWindowPos = ImGui::GetWindowPos();
     ImGui::PushFont(fonts.logo);
-    ImDrawList* logo = ImGui::GetWindowDrawList();
-    logo->AddText(ImVec2(ImGui::GetWindowPos().x+6, ImGui::GetWindowPos().y-56), 0xFFFFFFFF, "S");
+    ImDrawList* dlMainWindow = ImGui::GetWindowDrawList();
+    dlMainWindow->AddText(ImVec2(vMainWindowPos.x + 6, vMainWindowPos.y - 56), 0xFFFFFFFF, "S");
     ImGui::PopFont();
     ImGui::EndChild();
 
-    ImGui::SetCursorPos(ImVec2(50, 0));
-    ImGui::BeginChild("TOPBAR", ImVec2(829, 51), true);
-
-    ImGui::EndChild();
-   
-    ImGui::PopStyleVar();
-    ImGui::PopStyleVar();
-    ImGui::PopStyleVar();
-    ImGui::PopStyleVar();
     
     //Submenus aka child functions here (drawmiscgui() etc)
     ImGui::End();
