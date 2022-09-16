@@ -40,6 +40,11 @@ private:
     } fonts;
 
     float timeToNextConfigRefresh = 0.1f;
+    float desiredSidebarPos = -200;
+    bool isAnythingHovered = false;
+    float posDelta;
+    float curpos;
+    float nextSidebarPos;
 };
 
 inline std::optional<GUI> gui;

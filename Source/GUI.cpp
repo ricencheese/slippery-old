@@ -5,6 +5,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <stdio.h>
 
 #ifdef _WIN32
 #include <ShlObj.h>
@@ -24,6 +25,7 @@
 #include "Helpers.h"
 #include "Interfaces.h"
 #include "SDK/InputSystem.h"
+#include "SDK/GlobalVars.h"
 #include "Hacks/Visuals.h"
 #include "Hacks/Glow.h"
 #include "Hacks/AntiAim.h"
@@ -661,6 +663,7 @@ void GUI::renderGuiStyle2() noexcept
 
     ImGui::End();*/
     
+                                        //MAIN MENU WINDOW
     ImGui::SetNextWindowBgAlpha(1.0f);
     ImGui::SetNextWindowSize(ImVec2(880, 540), ImGuiCond_Once);
     ImGui::Begin("slippinMain", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoTitleBar);
@@ -674,6 +677,68 @@ void GUI::renderGuiStyle2() noexcept
     
     //Submenus aka child functions here (drawmiscgui() etc)
     ImGui::End();
+
+    
+                                        //SIDEBAR
+                                                                                                        //TODO: Add "use sidebar" checkbox 
+                                                                                                        //to home window to disable 
+                                                                                                        //sidebar and move all the shit 
+                                                                                                        //from there to the home page
+    ImGui::SetNextWindowSize(ImVec2(ImGui::GetIO().DisplaySize.x*0.2f+8, ImGui::GetIO().DisplaySize.y+16), ImGuiCond_Once);
+    ImGui::SetNextWindowPos(ImVec2(-2, -8), ImGuiCond_Once);
+    ImGui::Begin("sidebar", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBringToFrontOnFocus);{}
+    float mousepos = ImGui::GetMousePos().x;
+    static auto lastTime = 0.0f;
+
+
+                                        //NOTIFICATIONS/USER INFO
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 10.f);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 2);
+    ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.64f, 0.64f, 0.829f, 1.00f));
+    ImGui::SetNextWindowPos(ImVec2(ImGui::GetWindowPos().x + ImGui::GetWindowWidth() + 15, 25));
+    ImGui::SetNextWindowSize(ImVec2(150, 60), ImGuiCond_Once);
+    if (ImGui::IsWindowHovered())
+        lastTime = memory->globalVars->realtime;
+    ImGui::Begin("Notification", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar );
+    if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem | ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenOverlapped | ImGuiHoveredFlags_RootAndChildWindows))
+    {
+        isAnythingHovered = true;
+        lastTime = memory->globalVars->realtime;
+    }
+    ImGui::Text("real notification moment");
+    ImGui::PopStyleVar();
+    ImGui::PopStyleVar();
+    ImGui::PopStyleColor();
+    ImGui::End();
+   
+    
+    ImGui::Text(std::to_string(memory->globalVars->realtime).c_str());
+    ImGui::Text(std::to_string(lastTime).c_str());
+    renderConfigWindow(true);
+    ImGui::Text(std::to_string(ImGui::GetWindowPos().x).c_str());
+    if (mousepos > (ImGui::GetWindowWidth() + ImGui::GetWindowPos().x) && lastTime + 0.5 < memory->globalVars->realtime)
+        isAnythingHovered = false;
+    if (isAnythingHovered)      {desiredSidebarPos = -2;}
+    else { desiredSidebarPos = (-2 - ImGui::GetWindowWidth()); }
+
+
+    //"""smooth""" slide animation code
+    if (ImGui::GetWindowPos().x == desiredSidebarPos) {}
+    else {
+        curpos = ImGui::GetWindowPos().x;
+        float posDelta = desiredSidebarPos - curpos;
+        nextSidebarPos = curpos + (posDelta * memory->globalVars->frametime) * 2;
+        ImGui::SetWindowPos(ImVec2(nextSidebarPos, -8));
+    }//
+    
+    dlMainWindow->AddText(ImVec2(400, 30), 0xFFFFFFFF, ((std::to_string(posDelta) + "\ncur pos" + std::to_string(curpos) + "\ndesired pos" + std::to_string(desiredSidebarPos)+"\nnext step: " + std::to_string(nextSidebarPos)).c_str()));
+
+
+    ImGui::End();
+
+
+                                        //UNHOOK FLOATING BUTTON
+    ImGui::SetNextWindowPos(ImVec2(300, 50));
     ImGui::Begin("Unhook", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysAutoResize);
     if (ImGui::Button("unhook"))
         hooks->uninstall();
