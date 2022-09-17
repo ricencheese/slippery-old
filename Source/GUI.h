@@ -20,7 +20,11 @@ private:
     void renderChamsWindow(bool contentOnly = false) noexcept;
     void renderStyleWindow(bool contentOnly = false) noexcept;
     void renderConfigWindow(bool contentOnly = false) noexcept;
+    bool renderDeleteConfirmation(const char* configName) noexcept;
     void renderGuiStyle2() noexcept;
+    void renderGuiStyleCIRCLE() noexcept;
+    void rollout(ImGuiWindow* wind) noexcept;
+    void rollback(ImGuiWindow* wind) noexcept;
 
     struct {
         bool aimbot = false;
@@ -29,6 +33,7 @@ private:
         bool sound = false;
         bool style = false;
         bool config = false;
+        bool delConfirmation = false;
     } window;
 
     struct {
@@ -40,11 +45,9 @@ private:
     } fonts;
 
     float timeToNextConfigRefresh = 0.1f;
-    float desiredSidebarPos = -200;
-    bool isAnythingHovered = false;
-    float posDelta;
-    float curpos;
-    float nextSidebarPos;
+    float lastHovered;
+    int curTab = 0;
+    float lastTime;
 };
 
 inline std::optional<GUI> gui;

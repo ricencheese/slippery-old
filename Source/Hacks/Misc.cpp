@@ -404,12 +404,13 @@ void Misc::watermark() noexcept
         windowFlags |= ImGuiWindowFlags_NoInputs;
 
     ImGui::SetNextWindowBgAlpha(0.3f);
-    ImGui::Begin("Watermark", nullptr, windowFlags);
+    ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x - ImGui::CalcTextSize("slippery.gg!! | 1000 fps | 888 ms").x - 10, 20), ImGuiCond_Once);
+    ImGui::Begin("Watermark", nullptr, windowFlags | ImGuiWindowFlags_NoMove);
 
     static auto frameRate = 1.0f;
     frameRate = 0.9f * frameRate + 0.1f * memory->globalVars->absoluteFrameTime;
 
-    ImGui::Text("Osiris | %d fps | %d ms", frameRate != 0.0f ? static_cast<int>(1 / frameRate) : 0, GameData::getNetOutgoingLatency());
+    ImGui::Text("slippery.gg | %d fps | %d ms", frameRate != 0.0f ? static_cast<int>(1 / frameRate) : 0, GameData::getNetOutgoingLatency());
     ImGui::End();
 }
 

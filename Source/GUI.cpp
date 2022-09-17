@@ -568,7 +568,7 @@ void GUI::renderConfigWindow(bool contentOnly) noexcept
 
         ImGui::PushItemWidth(100.0f);
 
-        if (ImGui::Button("Open config directory"))
+        if (ImGui::Button("Open config directory", {100.f, 25.f}))
             config->openConfigDir();
 
         if (ImGui::Button("Create config", { 100.0f, 25.0f }))
@@ -611,19 +611,51 @@ void GUI::renderConfigWindow(bool contentOnly) noexcept
             }
             if (ImGui::Button("Save selected", { 100.0f, 25.0f }))
                 config->save(currentConfig);
-            if (ImGui::Button("Delete selected", { 100.0f, 25.0f })) {
-                config->remove(currentConfig);
-
-                if (static_cast<std::size_t>(currentConfig) < configItems.size())
-                    buffer = configItems[currentConfig];
-                else
-                    buffer.clear();
-            }
+            if (ImGui::Button("Delete Config", { 100.0f, 20.0f })) {
+                        window.delConfirmation = true;
+                    }
+                    if (window.delConfirmation) {
+                        ImGui::SetNextWindowSize(ImVec2(300, 128), ImGuiCond_Once);
+                        ImGui::SetNextWindowPos(ImVec2((ImGui::GetIO().DisplaySize.x / 2 - 150), (ImGui::GetIO().DisplaySize.y / 2 - 64)), ImGuiCond_Once);
+                        ImGui::Begin("Delete confirmation", &window.delConfirmation, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar);
+                        ImGui::Text("Are you sure you want to delete config");
+                        ImGui::TextColored(ImVec4(255, 0, 0, 1), (char*)buffer.c_str());
+                        ImGui::SameLine();
+                        ImGui::Text("?");
+                        if (ImGui::Button("Yes", ImVec2(140, 40))) {
+                            config->remove(currentConfig);
+                            window.delConfirmation = false;
+                        };
+                        ImGui::SameLine();
+                        if (ImGui::Button("No", ImVec2(140, 40))) {
+                            window.delConfirmation = false;
+                        };
+                        ImGui::End();
+                    }
         }
         ImGui::Columns(1);
         if (!contentOnly)
             ImGui::End();
 }
+
+
+
+void GUI::rollout(ImGuiWindow* wind) noexcept
+{
+    if (wind->Pos.x != ImGui::GetIO().DisplaySize.x)
+        ImGui::SetWindowPos(wind, ImVec2(wind->Pos.x + (ImGui::GetIO().DisplaySize.x - wind->Pos.x * memory->globalVars->frametime / 0.5f), -8));
+    else return;
+}
+
+
+void GUI::rollback(ImGuiWindow* wind) noexcept
+{
+    if (wind->Pos.x != ImGui::GetIO().DisplaySize.x)
+        ImGui::SetWindowPos(wind, ImVec2(wind->Pos.x + (ImGui::GetIO().DisplaySize.x - wind->Pos.x * memory->globalVars->frametime / 0.5f), -8));
+    else return;
+}
+
+
 
 void GUI::renderGuiStyle2() noexcept
 {
@@ -662,8 +694,8 @@ void GUI::renderGuiStyle2() noexcept
     }
 
     ImGui::End();*/
-    
-                                        //MAIN MENU WINDOW
+
+                                            //MAIN MENU WINDOW
     ImGui::SetNextWindowBgAlpha(1.0f);
     ImGui::SetNextWindowSize(ImVec2(880, 540), ImGuiCond_Once);
     ImGui::Begin("slippinMain", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoTitleBar);
@@ -672,72 +704,55 @@ void GUI::renderGuiStyle2() noexcept
     ImDrawList* dlMainWindow = ImGui::GetWindowDrawList();
     dlMainWindow->AddText(ImVec2(vMainWindowPos.x + 6, vMainWindowPos.y - 56), 0xFFFFFFFF, "S");
     ImGui::PopFont();
+    ImGui::SetCursorPos(ImVec2(52,52));
+    ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0.f, 0.f));
+    ImGui::BeginChild("Main", ImVec2(828, 488));
+    dlMainWindow->AddLine(ImVec2(vMainWindowPos.x + 51, 0), ImVec2(vMainWindowPos.x + 51, vMainWindowPos.y + 540), 0xFF8a8ab2, 2.f);
+    dlMainWindow->AddLine(ImVec2(vMainWindowPos.x + 51, vMainWindowPos.y + 51), ImVec2(vMainWindowPos.x + 880, vMainWindowPos.y+51), 0xFF8a8ab2, 2.f);
+    ImGui::PopStyleVar();
+    ImGui::Text("TEST TEXT");
+    ImGui::Button("small button", ImVec2(20, 8));
+    ImGui::Button("Medium button", ImVec2(50, 20));
+    ImGui::Button("BIG BUTTON", ImVec2(75, 30));
     ImGui::EndChild();
-
-    
-    //Submenus aka child functions here (drawmiscgui() etc)
+        //Submenus aka child functions here (drawmiscgui() etc)
     ImGui::End();
 
-    
-                                        //SIDEBAR
-                                                                                                        //TODO: Add "use sidebar" checkbox 
-                                                                                                        //to home window to disable 
-                                                                                                        //sidebar and move all the shit 
-                                                                                                        //from there to the home page
-    ImGui::SetNextWindowSize(ImVec2(ImGui::GetIO().DisplaySize.x*0.2f+8, ImGui::GetIO().DisplaySize.y+16), ImGuiCond_Once);
-    ImGui::SetNextWindowPos(ImVec2(-2, -8), ImGuiCond_Once);
-    ImGui::Begin("sidebar", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoBringToFrontOnFocus);{}
-    float mousepos = ImGui::GetMousePos().x;
-    static auto lastTime = 0.0f;
 
 
-                                        //NOTIFICATIONS/USER INFO
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 10.f);
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 2);
-    ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.64f, 0.64f, 0.829f, 1.00f));
-    ImGui::SetNextWindowPos(ImVec2(ImGui::GetWindowPos().x + ImGui::GetWindowWidth() + 15, 25));
-    ImGui::SetNextWindowSize(ImVec2(150, 60), ImGuiCond_Once);
-    if (ImGui::IsWindowHovered())
-        lastTime = memory->globalVars->realtime;
-    ImGui::Begin("Notification", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar );
-    if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem | ImGuiHoveredFlags_AllowWhenBlockedByPopup | ImGuiHoveredFlags_AllowWhenOverlapped | ImGuiHoveredFlags_RootAndChildWindows))
-    {
-        isAnythingHovered = true;
-        lastTime = memory->globalVars->realtime;
-    }
-    ImGui::Text("real notification moment");
+                                            //SIDEBAR
+    ImGui::SetNextWindowSize(ImVec2(ImGui::GetIO().DisplaySize.x * 0.2f+8, ImGui::GetIO().DisplaySize.y+16), ImGuiCond_Once);
+    ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x * 0.8f, -8), ImGuiCond_Once);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 2.f);
+    ImGui::Begin("sidebar", nullptr, ImGuiWindowFlags_NoMove|ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoTitleBar|ImGuiWindowFlags_NoScrollbar);
     ImGui::PopStyleVar();
-    ImGui::PopStyleVar();
-    ImGui::PopStyleColor();
-    ImGui::End();
-   
-    
-    ImGui::Text(std::to_string(memory->globalVars->realtime).c_str());
-    ImGui::Text(std::to_string(lastTime).c_str());
+    ImGui::Text("Config menu");
+    ImGui::Separator();
     renderConfigWindow(true);
-    ImGui::Text(std::to_string(ImGui::GetWindowPos().x).c_str());
-    if (mousepos > (ImGui::GetWindowWidth() + ImGui::GetWindowPos().x) && lastTime + 0.5 < memory->globalVars->realtime)
-        isAnythingHovered = false;
-    if (isAnythingHovered)      {desiredSidebarPos = -2;}
-    else { desiredSidebarPos = (-2 - ImGui::GetWindowWidth()); }
-
-
-    //"""smooth""" slide animation code
-    if (ImGui::GetWindowPos().x == desiredSidebarPos) {}
-    else {
-        curpos = ImGui::GetWindowPos().x;
-        float posDelta = desiredSidebarPos - curpos;
-        nextSidebarPos = curpos + (posDelta * memory->globalVars->frametime) * 2;
-        ImGui::SetWindowPos(ImVec2(nextSidebarPos, -8));
-    }//
-    
-    dlMainWindow->AddText(ImVec2(400, 30), 0xFFFFFFFF, ((std::to_string(posDelta) + "\ncur pos" + std::to_string(curpos) + "\ndesired pos" + std::to_string(desiredSidebarPos)+"\nnext step: " + std::to_string(nextSidebarPos)).c_str()));
-
-
+    ImGui::Separator();
+    ImGui::Text("Chatbox");
+    ImGui::Separator();
+    ImGui::BeginChild("chatbox", ImVec2(0, 350), true);
+    ImGui::EndChild();
+    float sidebarPos = ImGui::GetWindowPos().x;
     ImGui::End();
+                                            //BOOKMARK
+
+    ImGui::Begin("bookmark", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
+    ImGui::End();
+    ImGuiWindow* wSidebar = ImGui::FindWindowByName("sidebar");
+    ImGui::SetWindowSize("bookmark", ImVec2(wSidebar->Pos.x - ImGui::GetIO().DisplaySize.x, 30));
+    ImGui::SetWindowPos("bookmark", ImVec2(wSidebar->Pos.x - ImGui::GetWindowSize().x, 30));
+
+                                            //SIDEBAR SLIDING ANIMATION
+    if (ImGui::IsWindowHovered())
+        rollout(wSidebar);
+    else if (sidebarPos != ImGui::GetIO().DisplaySize.x)
+        rollback(wSidebar);
+    
 
 
-                                        //UNHOOK FLOATING BUTTON
+                                            //UNHOOK FLOATING BUTTON
     ImGui::SetNextWindowPos(ImVec2(300, 50));
     ImGui::Begin("Unhook", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysAutoResize);
     if (ImGui::Button("unhook"))
@@ -745,4 +760,53 @@ void GUI::renderGuiStyle2() noexcept
     ImGui::End();
 }
 
+
+void GUI::renderGuiStyleCIRCLE() noexcept
+{
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 360.f);
+    ImGui::SetNextWindowSize(ImVec2(600, 600), ImGuiCond_Once);
+    ImGui::Begin("circleMenu", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar);
+    ImGui::PopStyleVar();
+    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.3f, 0.3f, 0.3f, 1.0f));
+    ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 360.f);
+    ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 360.f);
+    ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() / 2-35, 4));
+    if (ImGui::Button("Aimbot", ImVec2(70, 70)))
+        curTab = 0;
+    ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() / 2 + 110, 50));
+    if (ImGui::Button("Chams", ImVec2(70, 70)))
+        curTab = 1;
+    ImGui::SetCursorPos(ImVec2(ImGui::GetWindowWidth() / 2 + 202, 148));
+    if (ImGui::Button("Config", ImVec2(70, 70)))
+        curTab = 2;
+    ImGui::SetCursorPos(ImVec2(75, 75));
+    ImGui::BeginChild("Main", ImVec2(450, 450));
+
+    ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 0.f);
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(1.f, 1.f, 1.f, 0.f));
+    ImGui::SetCursorPos(ImVec2(65, 65));
+    ImGui::BeginChild("innerMain", ImVec2(320,320));
+
+    
+    switch (curTab) {
+    case 0:renderAimbotWindow(true); break;
+    case 1:renderChamsWindow(true); break;
+    case 2:renderConfigWindow(true); break;
+    }
+
+
+    ImGui::EndChild();
+    ImGui::PopStyleColor();
+    ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 360.f);
+    ImGui::EndChild();
+
+    ImGui::PopStyleVar();
+    ImGui::PopStyleVar();
+    ImGui::PopStyleColor();
+    ImGui::End();
+    ImGui::Begin("unhook_b", nullptr, ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoTitleBar);
+    if (ImGui::Button("unhook"))
+        hooks->uninstall();
+    ImGui::End();
+}
 
