@@ -26,6 +26,7 @@
 #include "Interfaces.h"
 #include "SDK/InputSystem.h"
 #include "SDK/GlobalVars.h"
+#include "SDK/Cvar.h"
 #include "Hacks/Visuals.h"
 #include "Hacks/Glow.h"
 #include "Hacks/AntiAim.h"
@@ -639,24 +640,6 @@ void GUI::renderConfigWindow(bool contentOnly) noexcept
 }
 
 
-
-void GUI::rollout(ImGuiWindow* wind) noexcept
-{
-    if (wind->Pos.x != ImGui::GetIO().DisplaySize.x)
-        ImGui::SetWindowPos(wind, ImVec2(wind->Pos.x + (ImGui::GetIO().DisplaySize.x - wind->Pos.x * memory->globalVars->frametime / 0.5f), -8));
-    else return;
-}
-
-
-void GUI::rollback(ImGuiWindow* wind) noexcept
-{
-    if (wind->Pos.x != ImGui::GetIO().DisplaySize.x)
-        ImGui::SetWindowPos(wind, ImVec2(wind->Pos.x + (ImGui::GetIO().DisplaySize.x - wind->Pos.x * memory->globalVars->frametime / 0.5f), -8));
-    else return;
-}
-
-
-
 void GUI::renderGuiStyle2() noexcept
 {
     /*ImGui::Begin("slippin", nullptr, windowFlags | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_AlwaysAutoResize);
@@ -698,26 +681,19 @@ void GUI::renderGuiStyle2() noexcept
                                             //MAIN MENU WINDOW
     ImGui::SetNextWindowBgAlpha(1.0f);
     ImGui::SetNextWindowSize(ImVec2(880, 540), ImGuiCond_Once);
+    ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Once);
     ImGui::Begin("slippinMain", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoTitleBar);
     ImVec2 vMainWindowPos = ImGui::GetWindowPos();
     ImGui::PushFont(fonts.logo);
-    ImDrawList* dlMainWindow = ImGui::GetWindowDrawList();
+    ImDrawList* dlMainWindow = ImGui::GetForegroundDrawList();
     dlMainWindow->AddText(ImVec2(vMainWindowPos.x + 6, vMainWindowPos.y - 56), 0xFFFFFFFF, "S");
     ImGui::PopFont();
-    ImGui::SetCursorPos(ImVec2(52,52));
-    ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0.f, 0.f));
-    ImGui::BeginChild("Main", ImVec2(828, 488));
-    dlMainWindow->AddLine(ImVec2(vMainWindowPos.x + 51, 0), ImVec2(vMainWindowPos.x + 51, vMainWindowPos.y + 540), 0xFF8a8ab2, 2.f);
-    dlMainWindow->AddLine(ImVec2(vMainWindowPos.x + 51, vMainWindowPos.y + 51), ImVec2(vMainWindowPos.x + 880, vMainWindowPos.y+51), 0xFF8a8ab2, 2.f);
-    ImGui::PopStyleVar();
-    ImGui::Text("TEST TEXT");
-    ImGui::Button("small button", ImVec2(20, 8));
-    ImGui::Button("Medium button", ImVec2(50, 20));
-    ImGui::Button("BIG BUTTON", ImVec2(75, 30));
-    ImGui::EndChild();
-        //Submenus aka child functions here (drawmiscgui() etc)
-    ImGui::End();
+    dlMainWindow->AddLine(ImVec2(vMainWindowPos.x + 51, vMainWindowPos.y), ImVec2(vMainWindowPos.x + 51, vMainWindowPos.y + 540), 0xFF8a8ab2, 2.f);
+    dlMainWindow->AddLine(ImVec2(vMainWindowPos.x + 51, vMainWindowPos.y + 51), ImVec2(vMainWindowPos.x + 878, vMainWindowPos.y + 51), 0xFF8a8ab2, 2.f);
 
+    Misc::drawGUI(true);
+    
+    ImGui::End();
 
 
                                             //SIDEBAR
@@ -736,19 +712,14 @@ void GUI::renderGuiStyle2() noexcept
     ImGui::EndChild();
     float sidebarPos = ImGui::GetWindowPos().x;
     ImGui::End();
-                                            //BOOKMARK
-
-    ImGui::Begin("bookmark", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
-    ImGui::End();
-    ImGuiWindow* wSidebar = ImGui::FindWindowByName("sidebar");
-    ImGui::SetWindowSize("bookmark", ImVec2(wSidebar->Pos.x - ImGui::GetIO().DisplaySize.x, 30));
-    ImGui::SetWindowPos("bookmark", ImVec2(wSidebar->Pos.x - ImGui::GetWindowSize().x, 30));
-
                                             //SIDEBAR SLIDING ANIMATION
-    if (ImGui::IsWindowHovered())
-        rollout(wSidebar);
-    else if (sidebarPos != ImGui::GetIO().DisplaySize.x)
-        rollback(wSidebar);
+    if (ImGui::GetMousePos().x > (sidebarPos)) {
+        ImGui::SetWindowPos("sidebar", ImVec2(sidebarPos - (sidebarPos - (ImGui::GetIO().DisplaySize.x - ImGui::GetIO().DisplaySize.x * 0.2f + 8)) *3*memory->globalVars->frametime, 0));
+    }
+    if (ImGui::GetMousePos().x < (sidebarPos) && sidebarPos < ImGui::GetIO().DisplaySize.x*0.99) {
+        ImGui::SetWindowPos("sidebar", ImVec2(sidebarPos + ((ImGui::GetIO().DisplaySize.x - 8) - sidebarPos + 20 - 1) *3*memory->globalVars->frametime, 0));
+    }
+    ImGui::End();
     
 
 

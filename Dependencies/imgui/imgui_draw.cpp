@@ -188,8 +188,8 @@ void ImGui::StyleColorsDark(ImGuiStyle* dst)
 
     colors[ImGuiCol_Text]                   = ImVec4(1.00f, 1.00f, 1.00f, 1.00f     );
     colors[ImGuiCol_TextDisabled]           = ImVec4(0.50f, 0.50f, 0.50f, 1.00f     );
-    colors[ImGuiCol_WindowBg]               = ImVec4(0.105f, 0.105f, 0.105f, 1.00f     );
-    colors[ImGuiCol_ChildBg]                = ImVec4(0.15f, 0.15f, 0.15f, 1.00f  );
+    colors[ImGuiCol_WindowBg]               = ImVec4(0.105f, 0.105f, 0.105f, 1.00f  );
+    colors[ImGuiCol_ChildBg]                = ImVec4(0.129f, 0.129f, 0.129f, 1.000f );
     colors[ImGuiCol_PopupBg]                = ImVec4(0.08f, 0.08f, 0.08f, 0.94f     );
     colors[ImGuiCol_Border]                 = ImVec4(0.54f, 0.54f, 0.70f, 1.00f     );
     colors[ImGuiCol_BorderShadow]           = ImVec4(0.27f, 0.27f, 0.35f, 1.00f     );

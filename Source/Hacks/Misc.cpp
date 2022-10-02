@@ -99,9 +99,9 @@ struct MiscConfig {
     bool revealMoney{ false };
     bool revealSuspect{ false };
     bool revealVotes{ false };
-    bool fixAnimationLOD{ false };
-    bool fixBoneMatrix{ false };
-    bool fixMovement{ false };
+    bool fixAnimationLOD{ true };
+    bool fixBoneMatrix{ true };
+    bool fixMovement{ true };
     bool disableModelOcclusion{ false };
     bool nameStealer{ false };
     bool disablePanoramablur{ false };
@@ -147,7 +147,7 @@ struct MiscConfig {
     std::string customKillSound;
     std::string customHitSound;
     PurchaseList purchaseList;
-
+    int currentMiscTab{ 0 };
     struct Reportbot {
         bool enabled = false;
         bool textAbuse = false;
@@ -394,24 +394,29 @@ void Misc::recoilCrosshair(ImDrawList* drawList) noexcept
         drawCrosshair(drawList, pos, Helpers::calculateColor(miscConfig.recoilCrosshair.asColorToggle().asColor4()));
 }
 
-void Misc::watermark() noexcept
+void Misc::watermark(ImDrawList* drawlist, ImVec2 displaysize) noexcept
 {
     if (!miscConfig.watermark.enabled)
         return;
 
+    ConVar* namecvar = interfaces->cvar->findVar("name");
+    static auto name = namecvar->string;
     ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_AlwaysAutoResize;
     if (!gui->isOpen())
         windowFlags |= ImGuiWindowFlags_NoInputs;
+    std::string watermarkText = "slippery.gg / ";
+    watermarkText += name;
+    watermarkText += " / PRE-PRE-PRE-PRE-ALPHA";
+    
 
-    ImGui::SetNextWindowBgAlpha(0.3f);
-    ImGui::SetNextWindowPos(ImVec2(ImGui::GetIO().DisplaySize.x - ImGui::CalcTextSize("slippery.gg!! | 1000 fps | 888 ms").x - 10, 20), ImGuiCond_Once);
-    ImGui::Begin("Watermark", nullptr, windowFlags | ImGuiWindowFlags_NoMove);
-
-    static auto frameRate = 1.0f;
-    frameRate = 0.9f * frameRate + 0.1f * memory->globalVars->absoluteFrameTime;
-
-    ImGui::Text("slippery.gg | %d fps | %d ms", frameRate != 0.0f ? static_cast<int>(1 / frameRate) : 0, GameData::getNetOutgoingLatency());
-    ImGui::End();
+    drawlist->AddTriangleFilled(ImVec2(displaysize.x - ImGui::CalcTextSize(watermarkText.c_str()).x - 43, 29), ImVec2(displaysize.x - ImGui::CalcTextSize(watermarkText.c_str()).x - 70, 56), ImVec2(displaysize.x - ImGui::CalcTextSize(watermarkText.c_str()).x - 42, 56), 0xFF8a8ab2);
+    drawlist->AddTriangleFilled(ImVec2(displaysize.x - 37, 56), ImVec2(displaysize.x - 10, 29), ImVec2(displaysize.x - 37, 29), 0xFF8a8ab2);
+    drawlist->AddRectFilled(ImVec2(displaysize.x - ImGui::CalcTextSize(watermarkText.c_str()).x - 43, 29), ImVec2(displaysize.x - 37, 56), 0xFF8a8ab2);
+    
+    drawlist->AddRectFilledMultiColor(ImVec2(displaysize.x - ImGui::CalcTextSize(watermarkText.c_str()).x - 43, 30), ImVec2(displaysize.x - 37, 55), 0xFF222222, 0xFF333333, 0xFF333333, 0xFF222222);
+    drawlist->AddText(ImVec2(displaysize.x - ImGui::CalcTextSize(watermarkText.c_str()).x - 40, 34), 0xFFCCCCCC, watermarkText.c_str());
+    drawlist->AddTriangleFilled(ImVec2(displaysize.x - ImGui::CalcTextSize(watermarkText.c_str()).x - 43, 30), ImVec2(displaysize.x - ImGui::CalcTextSize(watermarkText.c_str()).x - 68, 55), ImVec2(displaysize.x - ImGui::CalcTextSize(watermarkText.c_str()).x - 43, 55), 0xFF222222);
+    drawlist->AddTriangleFilled(ImVec2(displaysize.x - 37, 30), ImVec2(displaysize.x - 12, 30), ImVec2(displaysize.x - 37, 55), 0xFF333333);
 }
 
 void Misc::prepareRevolver(UserCmd* cmd) noexcept
@@ -1329,204 +1334,237 @@ void Misc::drawGUI(bool contentOnly) noexcept
         ImGui::Begin("Misc", &windowOpen, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize
             | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
     }
-    ImGui::Columns(2, nullptr, false);
-    ImGui::SetColumnOffset(1, 230.0f);
-    ImGui::hotkey("Menu Key", miscConfig.menuKey);
-    ImGui::Checkbox("Anti AFK kick", &miscConfig.antiAfkKick);
-    ImGui::Checkbox("Auto strafe", &miscConfig.autoStrafe);
-    ImGui::Checkbox("Bunny hop", &miscConfig.bunnyHop);
-    ImGui::Checkbox("Fast duck", &miscConfig.fastDuck);
-    ImGui::Checkbox("Moonwalk", &miscConfig.moonwalk);
-    ImGui::Checkbox("Edge Jump", &miscConfig.edgejump);
+    ImGui::SetCursorPos(ImVec2(57, 4));
+    if (miscConfig.currentMiscTab == 0)
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.28f,0.28f,0.28f, 1.0f));
+    else ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f,0.2f,0.2f, 1.0f));
+    if (ImGui::Button("General", ImVec2(156, 43)))
+        miscConfig.currentMiscTab = 0;
     ImGui::SameLine();
-    ImGui::PushID("Edge Jump Key");
-    ImGui::hotkey("", miscConfig.edgejumpkey);
-    ImGui::PopID();
-    ImGui::Checkbox("Slowwalk", &miscConfig.slowwalk);
+    if (miscConfig.currentMiscTab == 1)
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.28f,0.28f,0.28f, 1.0f));
+    else ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f,0.2f,0.2f, 1.0f));
+    if (ImGui::Button("Movement", ImVec2(156, 43)))
+        miscConfig.currentMiscTab = 1;
     ImGui::SameLine();
-    ImGui::PushID("Slowwalk Key");
-    ImGui::hotkey("", miscConfig.slowwalkKey);
-    ImGui::PopID();
-    ImGuiCustom::colorPicker("Noscope crosshair", miscConfig.noscopeCrosshair);
-    ImGuiCustom::colorPicker("Recoil crosshair", miscConfig.recoilCrosshair);
-    ImGui::Checkbox("Auto pistol", &miscConfig.autoPistol);
-    ImGui::Checkbox("Auto reload", &miscConfig.autoReload);
-    ImGui::Checkbox("Auto accept", &miscConfig.autoAccept);
-    ImGui::Checkbox("Radar hack", &miscConfig.radarHack);
-    ImGui::Checkbox("Reveal ranks", &miscConfig.revealRanks);
-    ImGui::Checkbox("Reveal money", &miscConfig.revealMoney);
-    ImGui::Checkbox("Reveal suspect", &miscConfig.revealSuspect);
-    ImGui::Checkbox("Reveal votes", &miscConfig.revealVotes);
-
-    ImGui::Checkbox("Spectator list", &miscConfig.spectatorList.enabled);
+    if (miscConfig.currentMiscTab == 2)
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.28f,0.28f,0.28f, 1.0f));
+    else ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f,0.2f,0.2f, 1.0f));
+    if(ImGui::Button("Clantag", ImVec2(156, 43)))
+        miscConfig.currentMiscTab = 2;
     ImGui::SameLine();
-
-    ImGui::PushID("Spectator list");
-    if (ImGui::Button("..."))
-        ImGui::OpenPopup("");
-
-    if (ImGui::BeginPopup("")) {
-        ImGui::Checkbox("No Title Bar", &miscConfig.spectatorList.noTitleBar);
-        ImGui::EndPopup();
-    }
-    ImGui::PopID();
-
-    ImGui::Checkbox("Watermark", &miscConfig.watermark.enabled);
-    ImGuiCustom::colorPicker("Offscreen Enemies", miscConfig.offscreenEnemies.asColor4(), &miscConfig.offscreenEnemies.enabled);
+    if (miscConfig.currentMiscTab == 3)
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.28f,0.28f,0.28f, 1.0f));
+    else ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f,0.2f,0.2f, 1.0f));
+    if(ImGui::Button("Killsay", ImVec2(156, 43)))
+        miscConfig.currentMiscTab = 3;
     ImGui::SameLine();
-    ImGui::PushID("Offscreen Enemies");
-    if (ImGui::Button("..."))
-        ImGui::OpenPopup("");
+    if (miscConfig.currentMiscTab == 4)
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.28f,0.28f,0.28f, 1.0f));
+    else ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.2f,0.2f,0.2f, 1.0f));
+    if(ImGui::Button("Griefing", ImVec2(156, 43)))
+        miscConfig.currentMiscTab = 4;
 
-    if (ImGui::BeginPopup("")) {
-        ImGui::Checkbox("Health Bar", &miscConfig.offscreenEnemies.healthBar.enabled);
-        ImGui::SameLine();
-        ImGui::SetNextItemWidth(95.0f);
-        ImGui::Combo("Type", &miscConfig.offscreenEnemies.healthBar.type, "Gradient\0Solid\0Health-based\0");
-        if (miscConfig.offscreenEnemies.healthBar.type == HealthBar::Solid) {
-            ImGui::SameLine();
-            ImGuiCustom::colorPicker("", miscConfig.offscreenEnemies.healthBar.asColor4());
+    ImGui::PopStyleColor();
+    ImGui::SetCursorPos(ImVec2(52, 52));
+    ImGui::BeginChild("miscBg", ImVec2(0, 0));
+    ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.f, 0.f, 0.f, 0.f));
+    ImGui::SetCursorPos(ImVec2(8, 8));
+    ImGui::BeginChild("miscContainer", ImVec2(0,0));
+    switch (miscConfig.currentMiscTab) {
+    case 0:
+        ImGui::Combo("Hit Sound", &miscConfig.hitSound, "None\0Metal\0Gamesense\0Bell\0Glass\0Custom\0");
+        if (miscConfig.hitSound == 5) {
+            ImGui::InputText("Hit Sound filename", &miscConfig.customHitSound);
+            if (ImGui::IsItemHovered())
+                ImGui::SetTooltip("audio file must be put in csgo/sound/ directory");
         }
-        ImGui::EndPopup();
+        ImGui::PushID(5);
+        ImGui::Combo("Kill Sound", &miscConfig.killSound, "None\0Metal\0Gamesense\0Bell\0Glass\0Custom\0");
+        if (miscConfig.killSound == 5) {
+            ImGui::InputText("Kill Sound filename", &miscConfig.customKillSound);
+            if (ImGui::IsItemHovered())
+                ImGui::SetTooltip("audio file must be put in csgo/sound/ directory");
+        }
+        ImGui::hotkey("Menu Key", miscConfig.menuKey);
+        ImGui::Checkbox("Watermark", &miscConfig.watermark.enabled);
+        ImGuiCustom::colorPicker("Noscope crosshair", miscConfig.noscopeCrosshair);
+        ImGuiCustom::colorPicker("Recoil crosshair", miscConfig.recoilCrosshair);
+        ImGui::Checkbox("Auto pistol", &miscConfig.autoPistol);
+        ImGui::Checkbox("Auto reload", &miscConfig.autoReload);
+        ImGui::Checkbox("Auto accept", &miscConfig.autoAccept);
+        ImGui::Checkbox("Radar hack", &miscConfig.radarHack);
+        ImGui::Checkbox("Reveal ranks", &miscConfig.revealRanks);
+        ImGui::Checkbox("Reveal money", &miscConfig.revealMoney);
+        ImGui::Checkbox("Reveal suspect", &miscConfig.revealSuspect);
+        ImGui::Checkbox("Reveal votes", &miscConfig.revealVotes);
+        ImGui::Checkbox("Spectator list", &miscConfig.spectatorList.enabled);
+        ImGui::SameLine();
+
+        ImGui::PushID("Spectator list");
+        if (ImGui::Button("..."))
+            ImGui::OpenPopup("");
+
+        if (ImGui::BeginPopup("")) {
+            ImGui::Checkbox("No Title Bar", &miscConfig.spectatorList.noTitleBar);
+            ImGui::EndPopup();
+        }
+        ImGui::PopID();
+        ImGuiCustom::colorPicker("Offscreen Enemies", miscConfig.offscreenEnemies.asColor4(), &miscConfig.offscreenEnemies.enabled);
+        ImGui::SameLine();
+        ImGui::PushID("Offscreen Enemies");
+        if (ImGui::Button("..."))
+            ImGui::OpenPopup("");
+
+        if (ImGui::BeginPopup("")) {
+            ImGui::Checkbox("Health Bar", &miscConfig.offscreenEnemies.healthBar.enabled);
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(95.0f);
+            ImGui::Combo("Type", &miscConfig.offscreenEnemies.healthBar.type, "Gradient\0Solid\0Health-based\0");
+            if (miscConfig.offscreenEnemies.healthBar.type == HealthBar::Solid) {
+                ImGui::SameLine();
+                ImGuiCustom::colorPicker("", miscConfig.offscreenEnemies.healthBar.asColor4());
+            }
+            ImGui::EndPopup();
+        }
+        ImGui::PopID();
+        ImGui::Checkbox("Disable model occlusion", &miscConfig.disableModelOcclusion);
+
+        ImGui::Checkbox("Fast plant", &miscConfig.fastPlant);
+        ImGui::Checkbox("Fast Stop", &miscConfig.fastStop);
+        ImGuiCustom::colorPicker("Bomb timer", miscConfig.bombTimer);
+        ImGui::Checkbox("Quick reload", &miscConfig.quickReload);
+        ImGui::Checkbox("Prepare revolver", &miscConfig.prepareRevolver);
+        ImGui::SameLine();
+        ImGui::PushID("Prepare revolver Key");
+        ImGui::hotkey("", miscConfig.prepareRevolverKey);
+        ImGui::PopID();
+        ImGui::SetNextItemWidth(90.0f);
+        ImGui::InputInt("Fakelag", &miscConfig.chokedPackets, 1, 5);
+        miscConfig.chokedPackets = std::clamp(miscConfig.chokedPackets, 0, 64);
+        ImGui::SameLine();
+        ImGui::PushID("Fakelag on key");
+        ImGui::hotkey("", miscConfig.chokedPacketsKey);
+        ImGui::PopID();
+        ImGui::Checkbox("Fix tablet signal", &miscConfig.fixTabletSignal);
+        ImGui::SetNextItemWidth(120.0f);
+        ImGui::SliderFloat("Clamp angle delta", &miscConfig.maxAngleDelta, 0.0f, 255.0f, "%.2f");
+        ImGui::Checkbox("Grenade Prediction", &miscConfig.nadePredict);
+        ImGui::Checkbox("Opposite Hand Knife", &miscConfig.oppositeHandKnife);
+        ImGui::Checkbox("Preserve Killfeed", &miscConfig.preserveKillfeed.enabled);
+        ImGui::SameLine();
+
+        ImGui::PushID("Preserve Killfeed");
+        if (ImGui::Button("..."))
+            ImGui::OpenPopup("");
+
+        if (ImGui::BeginPopup("")) {
+            ImGui::Checkbox("Only Headshots", &miscConfig.preserveKillfeed.onlyHeadshots);
+            ImGui::EndPopup();
+        }
+        ImGui::PopID();
+
+        ImGui::Checkbox("Reveal enemy purchases", &miscConfig.purchaseList.enabled);
+        ImGui::SameLine();
+
+        ImGui::PushID("Reveal enemy purchases");
+        if (ImGui::Button("..."))
+            ImGui::OpenPopup("");
+
+        if (ImGui::BeginPopup("")) {
+            ImGui::SetNextItemWidth(75.0f);
+            ImGui::Combo("Mode", &miscConfig.purchaseList.mode, "Details\0Summary\0");
+            ImGui::Checkbox("Only During Freeze Time", &miscConfig.purchaseList.onlyDuringFreezeTime);
+            ImGui::Checkbox("Show Prices", &miscConfig.purchaseList.showPrices);
+            ImGui::Checkbox("No Title Bar", &miscConfig.purchaseList.noTitleBar);
+            ImGui::EndPopup();
+        }
+        ImGui::PopID();
+        ImGui::Checkbox("Anti AFK kick", &miscConfig.antiAfkKick);
+        ImGui::Checkbox("Disable HUD blur", &miscConfig.disablePanoramablur);
+        ImGui::SliderFloat("Aspect Ratio", &miscConfig.aspectratio, 0.0f, 5.0f, "%.2f");
+        break;
+
+    case 1:
+        ImGui::Checkbox("Autobhop", &miscConfig.bunnyHop);
+        ImGui::Checkbox("Autostrafe", &miscConfig.autoStrafe);
+        ImGui::Checkbox("Fastduck", &miscConfig.fastDuck);
+        ImGui::Checkbox("Slidewalk", &miscConfig.moonwalk);
+        ImGui::Checkbox("EdgeJump", &miscConfig.edgejump);
+        ImGui::SameLine();
+        ImGui::PushID("EdgeJump Key");
+        ImGui::hotkey("", miscConfig.edgejumpkey);
+        ImGui::PopID();
+        ImGui::Checkbox("Slowwalk", &miscConfig.slowwalk);
+        ImGui::SameLine();
+        ImGui::PushID("Slowwalk Key");
+        ImGui::hotkey("", miscConfig.slowwalkKey);
+        ImGui::PopID();
+        break;
+    case 2:
+        ImGui::Checkbox("Animated clan tag", &miscConfig.animatedClanTag);
+        ImGui::Checkbox("Clock tag", &miscConfig.clocktag);
+        ImGui::Checkbox("Custom clantag", &miscConfig.customClanTag);
+        ImGui::SameLine();
+        ImGui::PushItemWidth(120.0f);
+        ImGui::PushID(0);
+
+        if (ImGui::InputText("", miscConfig.clanTag, sizeof(miscConfig.clanTag)))
+            Misc::updateClanTag(true);
+        ImGui::PopID();
+        break;
+    case 3:
+        ImGui::Checkbox("Killsay", &miscConfig.killMessage);
+        ImGui::SameLine();
+        ImGui::PushItemWidth(120.0f);
+        ImGui::PushID(1);
+        ImGui::InputText("", &miscConfig.killMessageString);
+        ImGui::PopID();
+        break;
+    case 4:
+        ImGui::Checkbox("Name stealer", &miscConfig.nameStealer);
+        ImGui::PushID(3);
+        ImGui::SetNextItemWidth(100.0f);
+        ImGui::Combo("", &miscConfig.banColor, "White\0Red\0Purple\0Green\0Light green\0Turquoise\0Light red\0Gray\0Yellow\0Gray 2\0Light blue\0Gray/Purple\0Blue\0Pink\0Dark orange\0Orange\0");
+        ImGui::PopID();
+        ImGui::SameLine();
+        ImGui::PushID(4);
+        ImGui::InputText("", &miscConfig.banText);
+        ImGui::PopID();
+        ImGui::SameLine();
+        if (ImGui::Button("Setup fake ban"))
+            Misc::fakeBan(true);
+
+        ImGui::Checkbox("Reportbot", &miscConfig.reportbot.enabled);
+        ImGui::SameLine();
+        ImGui::PushID("Reportbot");
+
+        if (ImGui::Button("..."))
+            ImGui::OpenPopup("");
+
+        if (ImGui::BeginPopup("")) {
+            ImGui::PushItemWidth(80.0f);
+            ImGui::Combo("Target", &miscConfig.reportbot.target, "Enemies\0Allies\0All\0");
+            ImGui::InputInt("Delay (s)", &miscConfig.reportbot.delay);
+            miscConfig.reportbot.delay = (std::max)(miscConfig.reportbot.delay, 1);
+            ImGui::InputInt("Rounds", &miscConfig.reportbot.rounds);
+            miscConfig.reportbot.rounds = (std::max)(miscConfig.reportbot.rounds, 1);
+            ImGui::PopItemWidth();
+            ImGui::Checkbox("Abusive Communications", &miscConfig.reportbot.textAbuse);
+            ImGui::Checkbox("Griefing", &miscConfig.reportbot.griefing);
+            ImGui::Checkbox("Wall Hacking", &miscConfig.reportbot.wallhack);
+            ImGui::Checkbox("Aim Hacking", &miscConfig.reportbot.aimbot);
+            ImGui::Checkbox("Other Hacking", &miscConfig.reportbot.other);
+            if (ImGui::Button("Reset"))
+                Misc::resetReportbot();
+            ImGui::EndPopup();
+        }
+        ImGui::PopID();
+        break;
     }
-    ImGui::PopID();
-    ImGui::Checkbox("Fix animation LOD", &miscConfig.fixAnimationLOD);
-    ImGui::Checkbox("Fix bone matrix", &miscConfig.fixBoneMatrix);
-    ImGui::Checkbox("Fix movement", &miscConfig.fixMovement);
-    ImGui::Checkbox("Disable model occlusion", &miscConfig.disableModelOcclusion);
-    ImGui::SliderFloat("Aspect Ratio", &miscConfig.aspectratio, 0.0f, 5.0f, "%.2f");
-    ImGui::NextColumn();
-    ImGui::Checkbox("Disable HUD blur", &miscConfig.disablePanoramablur);
-    ImGui::Checkbox("Animated clan tag", &miscConfig.animatedClanTag);
-    ImGui::Checkbox("Clock tag", &miscConfig.clocktag);
-    ImGui::Checkbox("Custom clantag", &miscConfig.customClanTag);
-    ImGui::SameLine();
-    ImGui::PushItemWidth(120.0f);
-    ImGui::PushID(0);
-
-    if (ImGui::InputText("", miscConfig.clanTag, sizeof(miscConfig.clanTag)))
-        Misc::updateClanTag(true);
-    ImGui::PopID();
-    ImGui::Checkbox("Kill message", &miscConfig.killMessage);
-    ImGui::SameLine();
-    ImGui::PushItemWidth(120.0f);
-    ImGui::PushID(1);
-    ImGui::InputText("", &miscConfig.killMessageString);
-    ImGui::PopID();
-    ImGui::Checkbox("Name stealer", &miscConfig.nameStealer);
-    ImGui::PushID(3);
-    ImGui::SetNextItemWidth(100.0f);
-    ImGui::Combo("", &miscConfig.banColor, "White\0Red\0Purple\0Green\0Light green\0Turquoise\0Light red\0Gray\0Yellow\0Gray 2\0Light blue\0Gray/Purple\0Blue\0Pink\0Dark orange\0Orange\0");
-    ImGui::PopID();
-    ImGui::SameLine();
-    ImGui::PushID(4);
-    ImGui::InputText("", &miscConfig.banText);
-    ImGui::PopID();
-    ImGui::SameLine();
-    if (ImGui::Button("Setup fake ban"))
-        Misc::fakeBan(true);
-    ImGui::Checkbox("Fast plant", &miscConfig.fastPlant);
-    ImGui::Checkbox("Fast Stop", &miscConfig.fastStop);
-    ImGuiCustom::colorPicker("Bomb timer", miscConfig.bombTimer);
-    ImGui::Checkbox("Quick reload", &miscConfig.quickReload);
-    ImGui::Checkbox("Prepare revolver", &miscConfig.prepareRevolver);
-    ImGui::SameLine();
-    ImGui::PushID("Prepare revolver Key");
-    ImGui::hotkey("", miscConfig.prepareRevolverKey);
-    ImGui::PopID();
-    ImGui::Combo("Hit Sound", &miscConfig.hitSound, "None\0Metal\0Gamesense\0Bell\0Glass\0Custom\0");
-    if (miscConfig.hitSound == 5) {
-        ImGui::InputText("Hit Sound filename", &miscConfig.customHitSound);
-        if (ImGui::IsItemHovered())
-            ImGui::SetTooltip("audio file must be put in csgo/sound/ directory");
-    }
-    ImGui::PushID(5);
-    ImGui::Combo("Kill Sound", &miscConfig.killSound, "None\0Metal\0Gamesense\0Bell\0Glass\0Custom\0");
-    if (miscConfig.killSound == 5) {
-        ImGui::InputText("Kill Sound filename", &miscConfig.customKillSound);
-        if (ImGui::IsItemHovered())
-            ImGui::SetTooltip("audio file must be put in csgo/sound/ directory");
-    }
-    ImGui::PopID();
-    ImGui::SetNextItemWidth(90.0f);
-    ImGui::InputInt("Choked packets", &miscConfig.chokedPackets, 1, 5);
-    miscConfig.chokedPackets = std::clamp(miscConfig.chokedPackets, 0, 64);
-    ImGui::SameLine();
-    ImGui::PushID("Choked packets Key");
-    ImGui::hotkey("", miscConfig.chokedPacketsKey);
-    ImGui::PopID();
-    /*
-    ImGui::Text("Quick healthshot");
-    ImGui::SameLine();
-    hotkey(miscConfig.quickHealthshotKey);
-    */
-    ImGui::Checkbox("Grenade Prediction", &miscConfig.nadePredict);
-    ImGui::Checkbox("Fix tablet signal", &miscConfig.fixTabletSignal);
-    ImGui::SetNextItemWidth(120.0f);
-    ImGui::SliderFloat("Max angle delta", &miscConfig.maxAngleDelta, 0.0f, 255.0f, "%.2f");
-    ImGui::Checkbox("Opposite Hand Knife", &miscConfig.oppositeHandKnife);
-    ImGui::Checkbox("Preserve Killfeed", &miscConfig.preserveKillfeed.enabled);
-    ImGui::SameLine();
-
-    ImGui::PushID("Preserve Killfeed");
-    if (ImGui::Button("..."))
-        ImGui::OpenPopup("");
-
-    if (ImGui::BeginPopup("")) {
-        ImGui::Checkbox("Only Headshots", &miscConfig.preserveKillfeed.onlyHeadshots);
-        ImGui::EndPopup();
-    }
-    ImGui::PopID();
-
-    ImGui::Checkbox("Purchase List", &miscConfig.purchaseList.enabled);
-    ImGui::SameLine();
-
-    ImGui::PushID("Purchase List");
-    if (ImGui::Button("..."))
-        ImGui::OpenPopup("");
-
-    if (ImGui::BeginPopup("")) {
-        ImGui::SetNextItemWidth(75.0f);
-        ImGui::Combo("Mode", &miscConfig.purchaseList.mode, "Details\0Summary\0");
-        ImGui::Checkbox("Only During Freeze Time", &miscConfig.purchaseList.onlyDuringFreezeTime);
-        ImGui::Checkbox("Show Prices", &miscConfig.purchaseList.showPrices);
-        ImGui::Checkbox("No Title Bar", &miscConfig.purchaseList.noTitleBar);
-        ImGui::EndPopup();
-    }
-    ImGui::PopID();
-
-    ImGui::Checkbox("Reportbot", &miscConfig.reportbot.enabled);
-    ImGui::SameLine();
-    ImGui::PushID("Reportbot");
-
-    if (ImGui::Button("..."))
-        ImGui::OpenPopup("");
-
-    if (ImGui::BeginPopup("")) {
-        ImGui::PushItemWidth(80.0f);
-        ImGui::Combo("Target", &miscConfig.reportbot.target, "Enemies\0Allies\0All\0");
-        ImGui::InputInt("Delay (s)", &miscConfig.reportbot.delay);
-        miscConfig.reportbot.delay = (std::max)(miscConfig.reportbot.delay, 1);
-        ImGui::InputInt("Rounds", &miscConfig.reportbot.rounds);
-        miscConfig.reportbot.rounds = (std::max)(miscConfig.reportbot.rounds, 1);
-        ImGui::PopItemWidth();
-        ImGui::Checkbox("Abusive Communications", &miscConfig.reportbot.textAbuse);
-        ImGui::Checkbox("Griefing", &miscConfig.reportbot.griefing);
-        ImGui::Checkbox("Wall Hacking", &miscConfig.reportbot.wallhack);
-        ImGui::Checkbox("Aim Hacking", &miscConfig.reportbot.aimbot);
-        ImGui::Checkbox("Other Hacking", &miscConfig.reportbot.other);
-        if (ImGui::Button("Reset"))
-            Misc::resetReportbot();
-        ImGui::EndPopup();
-    }
-    ImGui::PopID();
-
-    if (ImGui::Button("Unhook"))
-        hooks->uninstall();
-
-    ImGui::Columns(1);
-    if (!contentOnly)
-        ImGui::End();
+    ImGui::PopStyleColor();
+    ImGui::EndChild();
+    ImGui::EndChild();
 }
 
 static void from_json(const json& j, ImVec2& v)
